@@ -111,6 +111,7 @@
             loadStoreItems();
         }
 
+
         function loadStoreItems() {
             const storeList = document.getElementById('store-list');
             storeList.innerHTML = ''; // Clear current list
@@ -120,7 +121,8 @@
                 const listItem = document.createElement('li');
                 listItem.className = 'my-1 p-2 bg-gray-800 rounded flex justify-between items-center';
                 listItem.innerHTML = `${item.name} - ${item.price} points 
-                <button onclick="purchaseItem(${index})" class="ml-2 bg-green-600 hover:bg-green-500 text-white p-1 rounded">Buy</button>`;
+                <button onclick="purchaseItem(${index})" class="ml-2 bg-green-600 hover:bg-green-500 text-white p-1 rounded">Купить</button>
+                <button onclick="removeItemFromStore(${index})" class="ml-2 bg-green-600 hover:bg-green-500 text-white p-1 rounded">Удалить</button>`;
                 storeList.appendChild(listItem);
             });
         }
@@ -138,6 +140,17 @@
             });
         }
 
+        function removeItemFromStore(index) {
+            let storeItems = JSON.parse(localStorage.getItem(localStorageKey)) || [];
+            let purchaseHistory = JSON.parse(localStorage.getItem(purchaseHistoryKey)) || [];
+            let currentPoints = parseInt(localStorage.getItem(pointsKey)) || 0;
+            const itemName = storeItems[index].name;
+            const itemPrice = storeItems[index].price;
+            storeItems.pop({ name: itemName, price: itemPrice });
+            localStorage.removeItem(localStorageKey, JSON.stringify(storeItems));
+            loadStoreItems();
+        }
+        
         function purchaseItem(index) {
             let storeItems = JSON.parse(localStorage.getItem(localStorageKey)) || [];
             let purchaseHistory = JSON.parse(localStorage.getItem(purchaseHistoryKey)) || [];
@@ -146,13 +159,13 @@
 
             if (currentPoints >= itemPrice) {
                 currentPoints -= itemPrice;
-                let purchasedItem = storeItems[index]; // do not remove from store
+                let purchasedItem = storeItems[index]; 
                 purchaseHistory.push(purchasedItem);
                 localStorage.setItem(purchaseHistoryKey, JSON.stringify(purchaseHistory));
                 localStorage.setItem(pointsKey, currentPoints);
                 document.getElementById('diet-points').innerText = currentPoints;
                 loadPurchaseHistory();
-                alert('Ты успешно купили предмет!');
+                alert('Ты успешно купил предмет!');
             } else {
                 alert("У тебя недостаточно очков!");
             }
