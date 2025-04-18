@@ -27,17 +27,17 @@
             Очки: <span id="diet-points">0</span> 🎯
         </div>
         <form id="diet-form" class="flex flex-col space-y-4">
-            <input type="number" class="form-input p-2 rounded" id="cal-consumed" placeholder="Calories Consumed" required>
-            <input type="number" class="form-input p-2 rounded" id="cal-burned" placeholder="Calories Burned" required>
-            <button type="button" class="form-button p-2 rounded text-lg" onclick="calculateDietPoints()">Введи потраченные/приобретенные калории для получения очков 🍎</button>
+            <input type="number" class="form-input p-2 rounded" id="cal-consumed" placeholder="Полученные калории" required>
+            <input type="number" class="form-input p-2 rounded" id="cal-burned" placeholder="Сожжённые калории" required>
+            <button type="button" class="form-button p-2 rounded text-lg" onclick="calculateDietPoints()">Нажми для получения очков 🍎</button>
         </form>
         <div id="diet-points-output" class="mt-4 p-4 border-t-2 border-gray-600 text-center">
             <!-- Diet Points Output will appear here -->
         </div>
         
         <form id="store-form" class="flex flex-col space-y-4 mt-8">
-            <input type="text" class="form-input p-2 rounded" id="item-name" placeholder="Custom Item Name" required>
-            <input type="number" class="form-input p-2 rounded" id="item-price" placeholder="Item Price" required>
+            <input type="text" class="form-input p-2 rounded" id="item-name" placeholder="Название предмета" required>
+            <input type="number" class="form-input p-2 rounded" id="item-price" placeholder="Цена" required>
             <button type="button" class="form-button p-2 rounded text-lg" onclick="addItemToStore()">Добавить предмет в магазин 🛒</button>
         </form>
         <div id="store-output" class="mt-4 p-4 border-t-2 border-gray-600">
