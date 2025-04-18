@@ -1,0 +1,161 @@
+<html>
+<head>
+    <title>Diet App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.3/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #1a202c;
+            color: #f7fafc;
+        }
+        .form-input, .form-button {
+            background-color: #4a5568;
+            color: #f7fafc;
+        }
+        .form-button {
+            transition: background-color 0.3s;
+        }
+        .form-button:hover {
+            background-color: #2d3748;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-center items-center">
+    <div class="max-w-lg w-full p-4 mx-2">
+        <h1 class="text-3xl text-center mb-8">Diet Tracker App</h1>
+        <div id="points-display" class="text-center mb-8 text-lg">
+            Diet Points: <span id="diet-points">0</span> 🎯
+        </div>
+        <form id="diet-form" class="flex flex-col space-y-4">
+            <input type="number" class="form-input p-2 rounded" id="cal-consumed" placeholder="Calories Consumed" required>
+            <input type="number" class="form-input p-2 rounded" id="cal-burned" placeholder="Calories Burned" required>
+            <button type="button" class="form-button p-2 rounded text-lg" onclick="calculateDietPoints()">Earn Your Diet Points 🍎</button>
+        </form>
+        <div id="diet-points-output" class="mt-4 p-4 border-t-2 border-gray-600 text-center">
+            <!-- Diet Points Output will appear here -->
+        </div>
+        
+        <form id="store-form" class="flex flex-col space-y-4 mt-8">
+            <input type="text" class="form-input p-2 rounded" id="item-name" placeholder="Custom Item Name" required>
+            <input type="number" class="form-input p-2 rounded" id="item-price" placeholder="Item Price" required>
+            <button type="button" class="form-button p-2 rounded text-lg" onclick="addItemToStore()">Add Item to Store 🛒</button>
+        </form>
+        <div id="store-output" class="mt-4 p-4 border-t-2 border-gray-600">
+            <h2 class="text-xl mb-2">Store Items</h2>
+            <ul id="store-list">
+                <!-- Store items will appear here -->
+            </ul>
+        </div>
+
+        <div id="purchase-history-output" class="mt-4 p-4 border-t-2 border-gray-600">
+            <h2 class="text-xl mb-2">Purchase History</h2>
+            <ul id="purchase-history">
+                <!-- Purchase history will appear here -->
+            </ul>
+        </div>
+
+    </div>
+
+    <script>
+        const localStorageKey = 'dietAppStore';
+        const pointsKey = 'dietPoints';
+        const purchaseHistoryKey = 'purchaseHistory';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStoredDietPoints();
+            loadStoreItems();
+            loadPurchaseHistory();
+        });
+
+        function loadStoredDietPoints() {
+            const savedPoints = parseInt(localStorage.getItem(pointsKey)) || 0;
+            document.getElementById('diet-points').innerText = savedPoints;
+        }
+
+        function calculateDietPoints() {
+            const calConsumed = parseInt(document.getElementById('cal-consumed').value);
+            const calBurned = parseInt(document.getElementById('cal-burned').value);
+            if (isNaN(calConsumed) || isNaN(calBurned)) {
+                alert("Please enter valid numbers for both fields");
+                return;
+            }
+            const points = calBurned - calConsumed;
+            const pointsOutput = document.getElementById('diet-points-output');
+            if (points > 0) {
+                pointsOutput.innerText = `Great job! You've earned ${points} diet points! 🎉`;
+                updateDietPoints(points);
+            } else {
+                pointsOutput.innerText = `Oops! Try to burn more calories next time.`;
+            }
+        }
+
+        function updateDietPoints(points) {
+            let currentPoints = parseInt(localStorage.getItem(pointsKey)) || 0;
+            currentPoints += points;
+            localStorage.setItem(pointsKey, currentPoints);
+            document.getElementById('diet-points').innerText = currentPoints;
+        }
+
+        function addItemToStore() {
+            const itemName = document.getElementById('item-name').value;
+            const itemPrice = parseInt(document.getElementById('item-price').value);
+            if (!itemName || isNaN(itemPrice) || itemPrice <= 0) {
+                alert("Please enter a valid name and a positive price");
+                return;
+            }
+
+            let storeItems = JSON.parse(localStorage.getItem(localStorageKey)) || [];
+            storeItems.push({ name: itemName, price: itemPrice });
+            localStorage.setItem(localStorageKey, JSON.stringify(storeItems));
+            loadStoreItems();
+        }
+
+        function loadStoreItems() {
+            const storeList = document.getElementById('store-list');
+            storeList.innerHTML = ''; // Clear current list
+
+            let storeItems = JSON.parse(localStorage.getItem(localStorageKey)) || [];
+            storeItems.forEach((item, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'my-1 p-2 bg-gray-800 rounded flex justify-between items-center';
+                listItem.innerHTML = `${item.name} - ${item.price} points 
+                <button onclick="purchaseItem(${index})" class="ml-2 bg-green-600 hover:bg-green-500 text-white p-1 rounded">Buy</button>`;
+                storeList.appendChild(listItem);
+            });
+        }
+
+        function loadPurchaseHistory() {
+            const purchaseList = document.getElementById('purchase-history');
+            purchaseList.innerHTML = ''; // Clear current list
+
+            let purchaseHistory = JSON.parse(localStorage.getItem(purchaseHistoryKey)) || [];
+            purchaseHistory.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.className = 'my-1 p-2 bg-gray-800 rounded';
+                listItem.innerHTML = `${item.name} - Purchased for ${item.price} points`;
+                purchaseList.appendChild(listItem);
+            });
+        }
+
+        function purchaseItem(index) {
+            let storeItems = JSON.parse(localStorage.getItem(localStorageKey)) || [];
+            let purchaseHistory = JSON.parse(localStorage.getItem(purchaseHistoryKey)) || [];
+            let currentPoints = parseInt(localStorage.getItem(pointsKey)) || 0;
+            const itemPrice = storeItems[index].price;
+
+            if (currentPoints >= itemPrice) {
+                currentPoints -= itemPrice;
+                let purchasedItem = storeItems[index]; // do not remove from store
+                purchaseHistory.push(purchasedItem);
+                localStorage.setItem(purchaseHistoryKey, JSON.stringify(purchaseHistory));
+                localStorage.setItem(pointsKey, currentPoints);
+                document.getElementById('diet-points').innerText = currentPoints;
+                loadPurchaseHistory();
+                alert('You have successfully bought the item!');
+            } else {
+                alert("You don't have enough diet points!");
+            }
+        }
+    </script>
+</body>
+</html>
