@@ -76,16 +76,17 @@
             const calConsumed = parseInt(document.getElementById('cal-consumed').value);
             const calBurned = parseInt(document.getElementById('cal-burned').value);
             if (isNaN(calConsumed) || isNaN(calBurned)) {
-                alert("Please enter valid numbers for both fields");
+                alert("Введите коректное число калорий в оба поля");
                 return;
             }
             const points = calBurned - calConsumed;
             const pointsOutput = document.getElementById('diet-points-output');
             if (points > 0) {
-                pointsOutput.innerText = `Great job! You've earned ${points} diet points! 🎉`;
+                pointsOutput.innerText = `Отличная работа! Ты заработал ${points} очков! 🎉`;
                 updateDietPoints(points);
             } else {
-                pointsOutput.innerText = `Oops! Try to burn more calories next time.`;
+                pointsOutput.innerText = `Ооо нет! Ты потерял ${points} очков! 🎉`;
+                updateDietPoints(points);
             }
         }
 
