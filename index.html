@@ -142,13 +142,11 @@
 
         function removeItemFromStore(index) {
             let storeItems = JSON.parse(localStorage.getItem(localStorageKey)) || [];
-            let purchaseHistory = JSON.parse(localStorage.getItem(purchaseHistoryKey)) || [];
-            let currentPoints = parseInt(localStorage.getItem(pointsKey)) || 0;
-            const itemName = storeItems[index].name;
-            const itemPrice = storeItems[index].price;
-            storeItems.pop({ name: itemName, price: itemPrice });
-            localStorage.removeItem(localStorageKey, JSON.stringify(storeItems));
-            loadStoreItems();
+            if (index >= 0 && index < storeItems.length) {
+                storeItems.splice(index, 1); // Удаляем элемент по индексу
+                localStorage.setItem(localStorageKey, JSON.stringify(storeItems));
+                loadStoreItems(); // Обновляем отображение списка
+            } 
         }
         
         function purchaseItem(index) {
