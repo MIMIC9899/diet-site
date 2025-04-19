@@ -61,6 +61,90 @@
             border: 1px solid #4a5568;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
+        #store-form {
+            background: #2d3748;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            border: 1px solid #4a5568;
+        }
+    
+        #store-form h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #cbd5e0;
+        }
+    
+        #store-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #a0aec0;
+            font-size: 0.875rem;
+        }
+    
+        #store-form input,
+        #store-form select {
+            background: #4a5568;
+            border: 1px solid #718096;
+            color: #f7fafc;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+    
+        #store-form input:focus,
+        #store-form select:focus {
+            outline: none;
+            border-color: #63b3ed;
+            box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.3);
+        }
+    
+        #store-form button[type="button"] {
+            background: #48bb78;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+        }
+    
+        #store-form button[type="button"]:hover {
+            background: #38a169;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+    
+        /* Стили для списка товаров */
+        #store-list li {
+            transition: transform 0.2s ease;
+            background: #4a5568;
+            margin-bottom: 0.75rem;
+        }
+    
+        #store-list li:hover {
+            transform: translateX(5px);
+        }
+    
+        /* Стили для сообщений */
+        #store-message {
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+    
+        /* Анимация добавления товара */
+        @keyframes itemAdded {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    
+        #store-list li {
+            animation: itemAdded 0.3s ease-out;
+        }
         .badge-healthy { background-color: #38a169; }
         .badge-warning { background-color: #dd6b20; }
         .badge-danger { background-color: #e53e3e; }
@@ -113,17 +197,41 @@
         </div>
         
         <!-- Форма добавления продуктов -->
-        <form id="store-form" class="flex flex-col space-y-4 mt-8">
-            <input type="text" class="form-input" id="item-name" placeholder="Название продукта" required>
-            <input type="number" class="form-input" id="item-calories" placeholder="Калории в продукте" required>
-            <select class="form-input" id="item-category">
-                <option value="common">Обычное</option>
-                <option value="drink">Напиток</option>
-                <option value="homemade">Домашнее</option>
-            </select>
-            <button type="button" class="form-button" onclick="addItemToStore()">Добавить</button>
-            <span id="store-message"></span>
-        </form>
+        <div class="mt-8">
+            <div class="mb-4">
+                <h2 class="text-center font-semibold text-lg mb-2">Добавить новый продукт</h2>
+                <p class="text-center text-gray-400 text-sm">Заполните поля для добавления в магазин</p>
+            </div>
+            
+            <form id="store-form" class="flex flex-col space-y-4">
+                <div>
+                    <label for="item-name">Название продукта</label>
+                    <input type="text" class="w-full" id="item-name" placeholder="Например: Яблоко" required>
+                </div>
+                
+                <div>
+                    <label for="item-calories">Калорийность</label>
+                    <input type="number" class="w-full" id="item-calories" placeholder="Количество калорий" required>
+                </div>
+                
+                <div>
+                    <label for="item-category">Категория</label>
+                    <select class="w-full" id="item-category">
+                        <option value="common">Обычное</option>
+                        <option value="drink">Напиток</option>
+                        <option value="homemade">Домашнее</option>
+                    </select>
+                </div>
+                
+                <button type="button" class="flex items-center justify-center gap-2" onclick="addItemToStore()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/>
+                    </svg>
+                    Добавить продукт
+                </button>
+                <span id="store-message"></span>
+            </form>
+        </div>
 
         <div id="store-output" class="mt-4 p-4 border-t-2 border-gray-600"> 
             <h2 class="text-xl mb-2">Магазин</h2>
