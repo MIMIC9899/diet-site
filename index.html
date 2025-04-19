@@ -25,6 +25,10 @@
             background-color: #c53030;
             transform: scale(1.05);
         }
+        .badge-healthy { background-color: #38a169; }
+        .badge-warning { background-color: #dd6b20; }
+        .badge-danger { background-color: #e53e3e; }
+        .badge-extreme { background-color: #805ad5; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-center items-center">
@@ -47,12 +51,19 @@
             <!-- Diet Points Output will appear here -->
         </div>
         
+        <!-- Форма добавления продуктов -->
         <form id="store-form" class="flex flex-col space-y-4 mt-8">
-            <input type="text" class="form-input p-2 rounded" id="item-name" placeholder="Название предмета" required>
-            <input type="number" class="form-input p-2 rounded" id="item-price" placeholder="Цена" required>
-            <button type="button" class="form-button p-2 rounded text-lg" onclick="addItemToStore()">Добавить предмет в магазин 🛒</button> 
+            <input type="text" class="form-input" id="item-name" placeholder="Название продукта" required>
+            <input type="number" class="form-input" id="item-calories" placeholder="Калории в продукте" required>
+            <select class="form-input" id="item-category">
+                <option value="common">Обычное</option>
+                <option value="drink">Напиток</option>
+                <option value="homemade">Домашнее</option>
+            </select>
+            <button type="button" class="form-button" onclick="addItemToStore()">Добавить</button>
             <span id="store-message"></span>
         </form>
+
         <div id="store-output" class="mt-4 p-4 border-t-2 border-gray-600"> 
             <h2 class="text-xl mb-2">Магазин</h2>
             <ul id="store-list">
@@ -84,6 +95,13 @@
         const purchaseHistoryKey = 'purchaseHistory';
         const pointsHistoryKey = 'pointsHistory';
 
+        // Множители для категорий
+        const categoryMultipliers = {
+            'drink': 0.8,
+            'homemade': 0.5,
+            'common': 1.0
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             loadStoredDietPoints();
             loadStoreItems();
@@ -95,7 +113,7 @@
             const savedPoints = parseInt(localStorage.getItem(pointsKey)) || 0;
             document.getElementById('diet-points').innerText = savedPoints;
         }
-
+        
         function calculateDietPoints() {
             const calConsumed = parseInt(document.getElementById('cal-consumed').value);
             const calBurned = parseInt(document.getElementById('cal-burned').value);
@@ -103,7 +121,7 @@
                 alert("Введите коректное число калорий в оба поля");
                 return;
             }
-            const points = calBurned * 2 - calConsumed;
+            const points = calBurned * 3 - calConsumed;
             const pointsOutput = document.getElementById('diet-points-output');
             if (points > 0 && points < 10000) {
                 pointsOutput.innerText = `Отличная работа! Ты заработал ${points} очков! 🎉`;
@@ -117,7 +135,6 @@
             } else {
                 pointsOutput.innerText = `А ты ноликом не ошибся?`;
             } 
-            
         }
 
         function updateDietPoints(points, calConsumed, calBurned) {
@@ -148,13 +165,39 @@
             loadPointsHistory();
         }
 
+        // Определение уровня "вредности"
+        function getSinLevel(calories) {
+            if (calories > 350) return 2; // Вредно
+            if (calories < 100) return 0; // полезно
+            return 1; // Нейтрально
+        }
+
+        // Получение иконки для уровня вредности
+        function getSinBadge(sinLevel) {
+            const badges = [
+                '<span class="badge-healthy px-2 py-1 rounded">🥗 Полезно</span>',
+                '<span class="px-2 py-1 rounded">⚠️ Нейтрально</span>',
+                '<span class="badge-warning px-2 py-1 rounded">🍩 Вредно</span>',
+            ];
+            return badges[sinLevel] || '';
+        }
+
+        // Добавление продукта в магазин
         function addItemToStore() {
             const itemName = document.getElementById('item-name').value;
-            const itemPrice = parseInt(document.getElementById('item-price').value);
-            if (!itemName || isNaN(itemPrice) || itemPrice <= 0) {
-                alert("Введите название и неотрицательную цену");
+            const calories = parseInt(document.getElementById('item-calories').value);
+            const itemCategory = document.getElementById('item-category').value;
+            
+            if (!itemName || isNaN(calories)) {
+                alert("Введите название и калории!");
                 return;
             }
+
+            let price = calories * 10;
+            price *= categoryMultipliers[itemCategory];
+
+            const sinLevel = getSinLevel(calories);
+            const badge = getSinBadge(sinLevel);
 
             let storeItems = JSON.parse(localStorage.getItem(localStorageKey)) || [];
             let itemExists = false;
@@ -165,41 +208,54 @@
             });
             const storeMessage = document.getElementById('store-message');
             if(itemExists == false){
-                storeItems.push({ name: itemName, price: itemPrice });
+                storeItems.push({ 
+                    name: itemName, 
+                    price: price,
+                    calories: calories,
+                    itemCategory: itemCategory,
+                    sin: badge
+                });
                 storeMessage.innerText = ``;
             }
             else{
                 storeMessage.innerText = `Такой предмет уже есть в магазине`;
             }
+            
             localStorage.setItem(localStorageKey, JSON.stringify(storeItems));
             loadStoreItems();
         }
 
-
+        // Загрузка продуктов магазина
         function loadStoreItems() {
             const storeList = document.getElementById('store-list');
-            storeList.innerHTML = ''; 
-
+            storeList.innerHTML = '';
+            
             let storeItems = JSON.parse(localStorage.getItem(localStorageKey)) || [];
+            
             storeItems.forEach((item, index) => {
                 const listItem = document.createElement('li');
                 listItem.className = 'my-1 p-2 bg-gray-800 rounded flex justify-between items-center';
-                if ([2,3,4].includes(item.price))    {
-                    listItem.innerHTML = `${item.name} - ${item.price} очка 
-                    <div class="flex">
-                        <button onclick="purchaseItem(${index})" class="bg-green-600 hover:bg-green-500 text-white p-1 rounded mr-2">Купить</button>
-                        <button onclick="removeItemFromStore(${index})" class="bg-red-600 hover:bg-red-500 text-white p-1 rounded">Удалить</button>
-                    </div>`;
-                } else {
-                    listItem.innerHTML = `${item.name} - ${item.price} очков 
-                    <div class="flex">
-                        <button onclick="purchaseItem(${index})" class="bg-green-600 hover:bg-green-500 text-white p-1 rounded mr-2">Купить</button>
-                        <button onclick="removeItemFromStore(${index})" class="bg-red-600 hover:bg-red-500 text-white p-1 rounded">Удалить</button>
-                    </div>`;
-                }
+                
+                listItem.innerHTML = `
+                    <div>
+                        <span class="font-medium">${item.name}</span>
+                        <span class="text-sm text-gray-400 ml-2">${item.calories} ккал </span>
+                        <span class="font-medium ml-2">${item.sin}</span>
+                    </div>
+                    <div>
+                        <button onclick="purchaseItem(${index})" class="bg-green-600 text-white p-1 rounded mr-2">
+                            Купить (${item.price} очков)
+                        </button>
+                        <button onclick="removeItemFromStore(${index})" class="bg-red-600 text-white p-1 rounded">
+                            Удалить
+                        </button>
+                    </div>
+                `;
+                
                 storeList.appendChild(listItem);
             });
         }
+
 
         function loadPurchaseHistory() {
             const purchaseList = document.getElementById('purchase-history');
