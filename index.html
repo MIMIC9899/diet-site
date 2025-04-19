@@ -145,6 +145,43 @@
         #store-list li {
             animation: itemAdded 0.3s ease-out;
         }
+        .history-group {
+            border: 1px solid #4a5568;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            background: #2d3748;
+        }
+
+        .group-header {
+            padding: 0.5rem 1rem;
+            background: #1a202c;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-group li {
+            margin-bottom: 0.5rem;
+            transition: transform 0.2s;
+        }
+
+        .history-group li:hover {
+            transform: translateX(5px);
+        }
+        .pagination button {
+            transition: all 0.2s ease;
+            min-width: 80px;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination span {
+            display: flex;
+            align-items: center;
+        }
         .badge-healthy { background-color: #38a169; }
         .badge-warning { background-color: #dd6b20; }
         .badge-danger { background-color: #e53e3e; }
@@ -285,6 +322,9 @@
             'common': 1.0
         };
 
+        let currentPurchasePage = 1;
+        let currentPointsPage = 1;
+
         auth.onAuthStateChanged(async user => {
             if (user) {
                 currentUser = user;
@@ -386,13 +426,47 @@
             }
         }
 
+        // Функции для изменения страниц
+        function changePurchasePage(step) {
+            const newPage = currentPurchasePage + step;
+            const totalPages = Math.ceil(userData.purchaseHistory.length / 10);
+            
+            if (newPage > 0 && newPage <= totalPages) {
+                currentPurchasePage = newPage;
+                updateHistoryUI();
+            }
+        }
+
+        function changePointsPage(step) {
+            const newPage = currentPointsPage + step;
+            const totalPages = Math.ceil(userData.pointsHistory.length / 10);
+            
+            if (newPage > 0 && newPage <= totalPages) {
+                currentPointsPage = newPage;
+                updateHistoryUI();
+            }
+        }
+
         function updateHistoryUI() {
             try {
+                // Функция для получения группы записей
+                const getPaginatedData = (array, page, itemsPerPage = 10) => {
+                    const start = (page - 1) * itemsPerPage;
+                    const end = start + itemsPerPage;
+                    return {
+                        data: array.slice(start, end),
+                        totalPages: Math.ceil(array.length / itemsPerPage)
+                    };
+                };
+        
                 // История покупок
                 const purchaseList = document.getElementById('purchase-history');
                 if (purchaseList) {
                     purchaseList.innerHTML = '';
-                    (userData.purchaseHistory || []).forEach(item => {
+                    const sortedPurchases = [...userData.purchaseHistory];
+                    const { data, totalPages } = getPaginatedData(sortedPurchases, currentPurchasePage);
+                    
+                    data.forEach(item => {
                         purchaseList.innerHTML += `
                             <li class="my-1 p-2 bg-gray-800 rounded">
                                 <div class="text-sm text-gray-400">${item.date}</div>
@@ -400,13 +474,33 @@
                             </li>
                         `;
                     });
+        
+                    // Добавляем пагинацию
+                    purchaseList.innerHTML += `
+                        <div class="pagination flex justify-center gap-2 mt-4">
+                            <button onclick="changePurchasePage(-1)" 
+                                class="px-3 py-1 rounded ${currentPurchasePage === 1 ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}">
+                                Назад
+                            </button>
+                            <span class="px-3 py-1 text-gray-400">
+                                Страница ${currentPurchasePage} из ${totalPages || 1}
+                            </span>
+                            <button onclick="changePurchasePage(1)" 
+                                class="px-3 py-1 rounded ${currentPurchasePage === totalPages ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}">
+                                Вперед
+                            </button>
+                        </div>
+                    `;
                 }
-
+        
                 // История очков
                 const pointsList = document.getElementById('points-history');
                 if (pointsList) {
                     pointsList.innerHTML = '';
-                    (userData.pointsHistory || []).slice().reverse().forEach(record => {
+                    const reversedHistory = [...userData.pointsHistory].reverse();
+                    const { data, totalPages } = getPaginatedData(reversedHistory, currentPointsPage);
+                    
+                    data.forEach(record => {
                         pointsList.innerHTML += `
                             <li class="my-1 p-2 bg-gray-800 rounded">
                                 <div class="text-sm text-gray-400">${record.date}</div>
@@ -416,12 +510,30 @@
                             </li>
                         `;
                     });
+        
+                    // Добавляем пагинацию
+                    pointsList.innerHTML += `
+                        <div class="pagination flex justify-center gap-2 mt-4">
+                            <button onclick="changePointsPage(-1)" 
+                                class="px-3 py-1 rounded ${currentPointsPage === 1 ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}">
+                                Назад
+                            </button>
+                            <span class="px-3 py-1 text-gray-400">
+                                Страница ${currentPointsPage} из ${totalPages || 1}
+                            </span>
+                            <button onclick="changePointsPage(1)" 
+                                class="px-3 py-1 rounded ${currentPointsPage === totalPages ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}">
+                                Вперед
+                            </button>
+                        </div>
+                    `;
                 }
             } catch (error) {
                 console.error('Ошибка истории:', error);
             }
         }
         
+
         function updateUI() {
             try {
                 // Обновление очков
