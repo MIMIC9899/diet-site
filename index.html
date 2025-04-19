@@ -174,14 +174,18 @@
             storeItems.forEach((item, index) => {
                 const listItem = document.createElement('li');
                 listItem.className = 'my-1 p-2 bg-gray-800 rounded flex justify-between items-center';
-                if ([2,3,4].includes(item.price % 10))    {
+                if ([2,3,4].includes(item.price))    {
                     listItem.innerHTML = `${item.name} - ${item.price} очка 
-                    <button onclick="purchaseItem(${index})" class="ml-2 bg-green-600 hover:bg-green-500 text-white p-1 rounded">Купить</button>
-                    <button onclick="removeItemFromStore(${index})" class="ml-2 bg-green-600 hover:bg-green-500 text-white p-1 rounded">Удалить</button>`;
+                    <div class="flex">
+                        <button onclick="purchaseItem(${index})" class="bg-green-600 hover:bg-green-500 text-white p-1 rounded mr-2">Купить</button>
+                        <button onclick="removeItemFromStore(${index})" class="bg-red-600 hover:bg-red-500 text-white p-1 rounded">Удалить</button>
+                    </div>`;
                 } else {
                     listItem.innerHTML = `${item.name} - ${item.price} очков 
-                    <button onclick="purchaseItem(${index})" class="ml-2 bg-green-600 hover:bg-green-500 text-white p-1 rounded">Купить</button>
-                    <button onclick="removeItemFromStore(${index})" class="ml-2 bg-green-600 hover:bg-green-500 text-white p-1 rounded">Удалить</button>`;
+                    <div class="flex">
+                        <button onclick="purchaseItem(${index})" class="bg-green-600 hover:bg-green-500 text-white p-1 rounded mr-2">Купить</button>
+                        <button onclick="removeItemFromStore(${index})" class="bg-red-600 hover:bg-red-500 text-white p-1 rounded">Удалить</button>
+                    </div>`;
                 }
                 storeList.appendChild(listItem);
             });
@@ -195,7 +199,10 @@
             purchaseHistory.forEach(item => {
                 const listItem = document.createElement('li');
                 listItem.className = 'my-1 p-2 bg-gray-800 rounded';
-                listItem.innerHTML = `${item.name} - Куплено за ${item.price} очков`;
+                listItem.innerHTML = `
+                    <div class="text-sm text-gray-400">${item.date}</div>
+                    <div class="text-sm mt-1">${item.details.name} - Куплено за ${item.details.price} очков</div>
+                `;
                 purchaseList.appendChild(listItem);
             });
         }
@@ -240,7 +247,14 @@
             if (currentPoints >= itemPrice) {
                 currentPoints -= itemPrice;
                 let purchasedItem = storeItems[index]; 
-                purchaseHistory.push(purchasedItem);
+                const changeRecord = {
+                    date: new Date().toLocaleString(),
+                    details: {
+                        name: itemName,
+                        price: itemPrice
+                    }
+                };
+                purchaseHistory.push(changeRecord);
                 localStorage.setItem(purchaseHistoryKey, JSON.stringify(purchaseHistory));
                 localStorage.setItem(pointsKey, currentPoints);
                 if (currentPoints < 100000){
