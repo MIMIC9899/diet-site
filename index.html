@@ -25,118 +25,68 @@
             background-color: #c53030;
             transform: scale(1.05);
         }
-        .auth-input {
-            background-color: #2d3748;
-            border: 1px solid #4a5568;
-            color: #f7fafc;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            width: 100%;
-            margin-bottom: 1rem;
-        }
-        .auth-input:focus {
-            outline: none;
-            border-color: #63b3ed;
-            box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.3);
-        }
-        .auth-button {
-            background-color: #4299e1;
-            color: white;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            width: 100%;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-        .auth-button:hover {
-            background-color: #3182ce;
-            transform: translateY(-1px);
-        }
-        .auth-container {
-            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-            border: 1px solid #4a5568;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-        }
         .badge-healthy { background-color: #38a169; }
         .badge-warning { background-color: #dd6b20; }
         .badge-danger { background-color: #e53e3e; }
+        .badge-extreme { background-color: #805ad5; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-center items-center">
-
-    <div id="auth-container" class="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 px-4">
-        <div class="auth-container p-8 rounded-xl max-w-md w-full">
-            <h2 class="text-2xl font-bold mb-6 text-center text-white">Добро пожаловать!</h2>
-            <div class="space-y-4">
-                <input type="text" id="auth-username" placeholder="Придумайте логин" class="auth-input" autocomplete="username">
-                <input type="password" id="auth-password" placeholder="Придумайте пароль" class="auth-input" autocomplete="current-password">
-                <button onclick="login()" class="auth-button bg-blue-600 hover:bg-blue-700">Войти</button>
-                <button onclick="register()" class="auth-button bg-green-600 hover:bg-green-700">Регистрация</button>
-                <p class="text-gray-400 text-sm text-center mt-4">
-                    Для начала работы войдите или зарегистрируйтесь
-                </p>
-            </div>
-        </div>
-    </div>
     <div class="max-w-4xl w-full p-4 mx-2">
-        <div id="app-content" class="hidden max-w-4xl w-full p-4 mx-2">
-            <div class="relative">
-                <button onclick="logout()" class="reset-button top-0 right-20 bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-lg text-sm shadow-md">
-                    Выйти
-                </button>
-                <button onclick="resetUserData()" class="reset-button top-0 д-0 bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-lg text-sm shadow-md">
-                    Сбросить данные
-                </button>
-            </div>
-            <h1 class="text-3xl text-center mb-8">Приложение для диеты</h1>
-            <div id="points-display" class="text-center mb-8 text-lg">
-                Очки: <span id="diet-points">0</span> 🎯 <span id="diet-points-message"></span>
-            </div>
-            <form id="diet-form" class="flex flex-col space-y-4">
-                <input type="number" class="form-input p-2 rounded" id="cal-consumed" placeholder="Полученные калории" required>
-                <input type="number" class="form-input p-2 rounded" id="cal-burned" placeholder="Сожжённые калории" required>
-                <button type="button" class="form-button p-2 rounded text-lg" onclick="calculateDietPoints()">Нажми для подсчёта очков 🍎</button>
-            </form>
-            <div id="diet-points-output" class="mt-4 p-4 border-t-2 border-gray-600 text-center">
-                <!-- Diet Points Output will appear here -->
-            </div>
-            
-            <!-- Форма добавления продуктов -->
-            <form id="store-form" class="flex flex-col space-y-4 mt-8">
-                <input type="text" class="form-input" id="item-name" placeholder="Название продукта" required>
-                <input type="number" class="form-input" id="item-calories" placeholder="Калории в продукте" required>
-                <select class="form-input" id="item-category">
-                    <option value="common">Обычное</option>
-                    <option value="drink">Напиток</option>
-                    <option value="homemade">Домашнее</option>
-                </select>
-                <button type="button" class="form-button" onclick="addItemToStore()">Добавить</button>
-                <span id="store-message"></span>
-            </form>
+        <div class="relative">
+            <button onclick="resetUserData()" class="reset-button absolute top-0 right-0 bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-lg text-sm shadow-md">
+                Сбросить все данные
+            </button>
+        </div>
+        <h1 class="text-3xl text-center mb-8">Приложение для диеты</h1>
+        <div id="points-display" class="text-center mb-8 text-lg">
+            Очки: <span id="diet-points">0</span> 🎯 <span id="diet-points-message"></span>
+        </div>
+        <form id="diet-form" class="flex flex-col space-y-4">
+            <input type="number" class="form-input p-2 rounded" id="cal-consumed" placeholder="Полученные калории" required>
+            <input type="number" class="form-input p-2 rounded" id="cal-burned" placeholder="Сожжённые калории" required>
+            <button type="button" class="form-button p-2 rounded text-lg" onclick="calculateDietPoints()">Нажми для подсчёта очков 🍎</button>
+        </form>
+        <div id="diet-points-output" class="mt-4 p-4 border-t-2 border-gray-600 text-center">
+            <!-- Diet Points Output will appear here -->
+        </div>
+        
+        <!-- Форма добавления продуктов -->
+        <form id="store-form" class="flex flex-col space-y-4 mt-8">
+            <input type="text" class="form-input" id="item-name" placeholder="Название продукта" required>
+            <input type="number" class="form-input" id="item-calories" placeholder="Калории в продукте" required>
+            <select class="form-input" id="item-category">
+                <option value="common">Обычное</option>
+                <option value="drink">Напиток</option>
+                <option value="homemade">Домашнее</option>
+            </select>
+            <button type="button" class="form-button" onclick="addItemToStore()">Добавить</button>
+            <span id="store-message"></span>
+        </form>
 
-            <div id="store-output" class="mt-4 p-4 border-t-2 border-gray-600"> 
-                <h2 class="text-xl mb-2">Магазин</h2>
-                <ul id="store-list">
-                    <!-- Store items will appear here -->
+        <div id="store-output" class="mt-4 p-4 border-t-2 border-gray-600"> 
+            <h2 class="text-xl mb-2">Магазин</h2>
+            <ul id="store-list">
+                <!-- Store items will appear here -->
+            </ul>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 mt-4">
+            <div id="purchase-history-output" class="flex-1 p-4 border-t-2 border-gray-600">
+                <h2 class="text-xl mb-2">История покупок</h2>
+                <ul id="purchase-history">
+                    <!-- Purchase history will appear here -->
                 </ul>
             </div>
 
-            <div class="flex flex-col md:flex-row gap-4 mt-4">
-                <div id="purchase-history-output" class="flex-1 p-4 border-t-2 border-gray-600">
-                    <h2 class="text-xl mb-2">История покупок</h2>
-                    <ul id="purchase-history">
-                        <!-- Purchase history will appear here -->
-                    </ul>
-                </div>
-
-                <div id="points-history-output" class="flex-1 p-4 border-t-2 border-gray-600">
-                    <h2 class="text-xl mb-2">История изменения очков</h2>
-                    <ul id="points-history">
-                        <!-- Points history will appear here -->
-                    </ul>
-                </div>
+            <div id="points-history-output" class="flex-1 p-4 border-t-2 border-gray-600">
+                <h2 class="text-xl mb-2">История изменения очков</h2>
+                <ul id="points-history">
+                    <!-- Points history will appear here -->
+                </ul>
             </div>
         </div>
+
     </div>
    
     <script>
@@ -144,92 +94,20 @@
         const pointsKey = 'dietPoints';
         const purchaseHistoryKey = 'purchaseHistory';
         const pointsHistoryKey = 'pointsHistory';
-        // Ключи для хранения данных
-        const usersKey = 'dietAppUsers';
-        const currentUserKey = 'dietAppCurrentUser';
 
+        // Множители для категорий
         const categoryMultipliers = {
             'drink': 0.8,
             'homemade': 0.5,
             'common': 1.0
         };
-        
-        // Показываем форму авторизации при загрузке
+
         document.addEventListener('DOMContentLoaded', () => {
-            const currentUser = localStorage.getItem(currentUserKey);
-            if (currentUser) {
-                initApp(currentUser);
-            } else {
-                document.getElementById('auth-container').classList.remove('hidden');
-            }
-        });
-
-        function login() {
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value;
-            
-            if (!username || !password) {
-                alert("Введите логин и пароль");
-                return;
-            }
-            
-            const users = JSON.parse(localStorage.getItem(usersKey)) || [];
-            const user = users.find(u => u.username === username && u.password === password);
-            
-            if (user) {
-                localStorage.setItem(currentUserKey, username);
-                initApp(username);
-            } else {
-                alert("Неверный логин или пароль");
-            }
-        }
-
-        function register() {
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value;
-            
-            if (!username || !password) {
-                alert("Введите логин и пароль");
-                return;
-            }
-            
-            const users = JSON.parse(localStorage.getItem(usersKey)) || [];
-            
-            if (users.some(u => u.username === username)) {
-                alert("Пользователь уже существует");
-                return;
-            }
-            
-            users.push({ username, password });
-            localStorage.setItem(usersKey, JSON.stringify(users));
-            localStorage.setItem(currentUserKey, username);
-            
-            initApp(username);
-        }
-
-        // Инициализация приложения после авторизации
-        function initApp(username) {
-            document.getElementById('auth-container').classList.add('hidden');
-            document.getElementById('app-content').classList.remove('hidden');
-            
-            // Обновляем ключи localStorage для текущего пользователя
-            window.localStorageKey = `dietAppStore_${username}`;
-            window.pointsKey = `dietPoints_${username}`;
-            window.purchaseHistoryKey = `purchaseHistory_${username}`;
-            window.pointsHistoryKey = `pointsHistory_${username}`;
-            
-            // Загружаем данные
             loadStoredDietPoints();
             loadStoreItems();
             loadPurchaseHistory();
             loadPointsHistory();
-        }
-
-        // Выход из системы
-        function logout() {
-            localStorage.removeItem(currentUserKey);
-            location.reload();
-        }
+        });
 
         function loadStoredDietPoints() {
             const savedPoints = parseInt(localStorage.getItem(pointsKey)) || 0;
