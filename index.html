@@ -1,5 +1,3 @@
-
-
 <html>
 <head>
     <title>Диета</title>
@@ -20,10 +18,22 @@
         .form-button:hover {
             background-color: #2d3748;
         }
+        .reset-button {
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .reset-button:hover {
+            background-color: #c53030;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-center items-center">
     <div class="max-w-4xl w-full p-4 mx-2">
+        <div class="relative">
+            <button onclick="resetUserData()" class="reset-button absolute top-0 right-0 bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-lg text-sm shadow-md">
+                Сбросить все данные
+            </button>
+        </div>
         <h1 class="text-3xl text-center mb-8">Приложение для диеты</h1>
         <div id="points-display" class="text-center mb-8 text-lg">
             Очки: <span id="diet-points">0</span> 🎯 <span id="diet-points-message"></span>
@@ -266,6 +276,22 @@
                 alert("Ты успешно купил предмет: " + itemName + "!");
             } else {
                 alert("У тебя недостаточно очков!");
+            }
+        }
+        function resetUserData() {
+            if (confirm("Вы уверены, что хотите удалить все данные? Это действие нельзя отменить!")) {
+                localStorage.removeItem(localStorageKey);
+                localStorage.removeItem(pointsKey);
+                localStorage.removeItem(purchaseHistoryKey);
+                localStorage.removeItem(pointsHistoryKey);
+                
+                // Обновляем интерфейс
+                loadStoredDietPoints();
+                loadStoreItems();
+                loadPurchaseHistory();
+                loadPointsHistory();
+                
+                alert("Все данные были успешно удалены!");
             }
         }
     </script>
