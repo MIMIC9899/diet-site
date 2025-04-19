@@ -185,7 +185,8 @@
         </div>
         <h1 class="text-3xl text-center mb-8">Приложение для диеты</h1>
         <div id="points-display" class="text-center mb-8 text-lg">
-            Очки: <span id="diet-points">0</span> 🎯 <span id="diet-points-message"></span>
+            Очки: <span id="diet-points">0</span> 🎯 
+            <span id="diet-points-message"></span>
         </div>
         <form id="diet-form" class="flex flex-col space-y-4">
             <input type="number" class="form-input p-2 rounded" id="cal-consumed" placeholder="Полученные калории" required>
@@ -457,12 +458,28 @@
         }
         
         async function calculateDietPoints() {
-            const calConsumed = parseInt(document.getElementById('cal-consumed').value);
-            const calBurned = parseInt(document.getElementById('cal-burned').value);
+            const calConsumed = parseInt(document.getElementById('cal-consumed').value) || 0;
+            const calBurned = parseInt(document.getElementById('cal-burned').value) || 0;
             
+            // Проверка на валидные числа
+            if (isNaN(calConsumed) || isNaN(calBurned)) {
+                alert("Введите корректные числовые значения!");
+                return;
+            }
+        
             const points = calBurned * 3 - calConsumed;
-            userData.points += points;
             
+            // Инициализация points если undefined
+            userData.points = userData.points || 0; 
+            userData.points += points;
+        
+            // Добавляем вашу проверку
+            if (userData.points > 100000) {
+                document.getElementById('diet-points-message').innerText = "А не многовато?";
+            } else {
+                document.getElementById('diet-points-message').innerText = "";
+            }
+        
             // Добавляем запись в историю
             userData.pointsHistory.push({
                 date: new Date().toLocaleString(),
@@ -475,8 +492,13 @@
                 }
             });
             
-            await saveData();
-            updateUI();
+            try {
+                await saveData();
+                updateUI();
+            } catch (error) {
+                console.error('Ошибка сохранения:', error);
+                alert('Ошибка при сохранении данных');
+            }
         }
 
         function getSinLevel(calories) {
