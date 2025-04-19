@@ -64,6 +64,9 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-center items-center">
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50 hidden">
+        <div class="text-white text-xl">Загрузка данных...</div>
+    </div>
     <div id="auth-container" class="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 px-4">
         <div class="auth-container p-8 rounded-xl max-w-md w-full">
             <h2 class="text-2xl font-bold mb-6 text-center text-white">Добро пожаловать!</h2>
@@ -198,7 +201,18 @@
                 }
             });
         });
-        
+        // Обработчик изменения состояния авторизации
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                console.log("Пользователь вошел:", user.uid);
+                await initApp(user.uid);
+            } else {
+                console.log("Пользователь вышел");
+                document.getElementById('auth-container').classList.remove('hidden');
+                document.getElementById('app-content').classList.add('hidden');
+            }
+        });
+
         // Авторизация
         async function login() {
             const username = document.getElementById('auth-username').value.trim();
@@ -214,6 +228,7 @@
             try {
                 await auth.signInWithEmailAndPassword(email, password);
             } catch (error) {
+                console.error("Ошибка входа:", error);
                 alert("Ошибка входа: " + error.message);
             }
         }
@@ -227,13 +242,30 @@
                 alert("Введите логин и пароль");
                 return;
             }
+
+            if (password.length < 6) {
+                alert("Пароль должен содержать минимум 6 символов");
+                return;
+            }
             
             const email = `${username}@dietapp.com`;
             
             try {
-                await auth.createUserWithEmailAndPassword(email, password);
-                alert("Регистрация успешна!");
+                const { user } = await auth.createUserWithEmailAndPassword(email, password);
+                console.log("Пользователь зарегистрирован:", user.uid);
+                
+                // Создаем начальные данные для нового пользователя
+                currentUserData = {
+                    points: 1000, // Начальный бонус
+                    store: [],
+                    purchaseHistory: [],
+                    pointsHistory: []
+                };
+                
+                await database.ref('users/' + user.uid).set(currentUserData);
+                alert("Регистрация успешна! Вы получили 1000 стартовых очков.");
             } catch (error) {
+                console.error("Ошибка регистрации:", error);
                 alert("Ошибка регистрации: " + error.message);
             }
         }
@@ -244,38 +276,72 @@
             location.reload();
         }
 
-        // Инициализация приложения
         async function initApp(userId) {
-            document.getElementById('auth-container').classList.add('hidden');
-            document.getElementById('app-content').classList.remove('hidden');
-            
-            // Загрузка данных пользователя
-            const snapshot = await database.ref('users/' + userId).once('value');
-            currentUserData = snapshot.val() || {
-                points: 0,
-                store: [],
-                purchaseHistory: [],
-                pointsHistory: []
-            };
-            
-            // Обновление интерфейса
-            updateUI();
+            try {
+                document.getElementById('loading-overlay').classList.remove('hidden');
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
+                
+                const snapshot = await database.ref('users/' + userId).once('value');
+                if (snapshot.exists()) {
+                    currentUserData = snapshot.val();
+                } else {
+                    // Создаем новую структуру данных для нового пользователя
+                    currentUserData = {
+                        points: 0,
+                        store: [],
+                        purchaseHistory: [],
+                        pointsHistory: []
+                    };
+                    await database.ref('users/' + userId).set(currentUserData);
+                }
+                
+                // Принудительно обновляем UI
+                setTimeout(() => {
+                    updateUI();
+                    loadStoreItems();
+                    loadPurchaseHistory();
+                    loadPointsHistory();
+                }, 300);
+            } catch (error) {
+                console.error("Ошибка инициализации:", error);
+                alert("Ошибка загрузки данных. Попробуйте перезагрузить страницу.");
+            } finally {
+                document.getElementById('loading-overlay').classList.add('hidden');
+            }
         }
 
         // Сохранение данных
         async function saveData() {
-            const user = auth.currentUser;
-            if (user) {
-                await database.ref('users/' + user.uid).set(currentUserData);
+            try {
+                const user = auth.currentUser;
+                if (user) {
+                    await database.ref('users/' + user.uid).set(currentUserData);
+                    console.log("Данные сохранены");
+                }
+            } catch (error) {
+                console.error("Ошибка сохранения:", error);
             }
         }
 
         // Обновление интерфейса
         function updateUI() {
-            document.getElementById('diet-points').textContent = currentUserData.points;
-            loadStoreItems();
-            loadPurchaseHistory();
-            loadPointsHistory();
+            try {
+                document.getElementById('diet-points').textContent = currentUserData.points || 0;
+                
+                // Проверка на существование элементов перед обновлением
+                if (document.getElementById('store-list')) loadStoreItems();
+                if (document.getElementById('purchase-history')) loadPurchaseHistory();
+                if (document.getElementById('points-history')) loadPointsHistory();
+                
+                // Обновление сообщения о точках
+                const pointsMessage = document.getElementById('diet-points-message');
+                if (pointsMessage) {
+                    pointsMessage.textContent = currentUserData.points > 100000 ? "А не многовато?" : "";
+                }
+            } catch (error) {
+                console.error("Ошибка обновления UI:", error);
+            }
         }
         
         // Подсчет очков
