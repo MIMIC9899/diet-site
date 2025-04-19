@@ -267,7 +267,7 @@
                     </svg>
                     Добавить продукт
                 </button>
-                <span id="store-message"></span>
+                <span id="store-message" class="flex font-semibold text-lg mb-2"></span>
             </form>
         </div>
 
@@ -426,7 +426,6 @@
             }
         }
 
-        // Функции для изменения страниц
         function changePurchasePage(step) {
             const newPage = currentPurchasePage + step;
             const totalPages = Math.ceil(userData.purchaseHistory.length / 10);
@@ -532,7 +531,6 @@
                 console.error('Ошибка истории:', error);
             }
         }
-        
 
         function updateUI() {
             try {
@@ -644,18 +642,28 @@
                 alert("Ошибка загрузки данных. Попробуйте перезайти.");
                 return;
             }
-        
-            const price = calories * 10 * (categoryMultipliers[itemCategory] || 1);
-            const sinLevel = getSinLevel(calories);
-            const badge = getSinBadge(sinLevel);
-            
-            userData.storeItems.push({ 
-                name: itemName, 
-                price: price,
-                calories: calories,
-                itemCategory: itemCategory,
-                sin: badge
+
+            const itemExists = false;
+            userData.storeItems.forEach(item => {
+                if (item.name == itemName) {
+                    document.getElementById('store-message').innerHTML = "Такой товар уже есть";
+                    itemExists = true;
+                }
             });
+            if (itemExists == false) {
+                document.getElementById('store-message').innerHTML = "";
+                const price = calories * 10 * (categoryMultipliers[itemCategory] || 1);
+                const sinLevel = getSinLevel(calories);
+                const badge = getSinBadge(sinLevel);
+                
+                userData.storeItems.push({ 
+                    name: itemName, 
+                    price: price,
+                    calories: calories,
+                    itemCategory: itemCategory,
+                    sin: badge
+                });
+            }
             
             await saveData();
             updateUI();
