@@ -228,10 +228,10 @@
         <form id="diet-form" class="flex flex-col space-y-4">
             <input type="number" class="form-input p-2 rounded" id="cal-consumed" placeholder="Полученные калории" required>
             <input type="number" class="form-input p-2 rounded" id="cal-burned" placeholder="Сожжённые калории" required>
+            <input type="text" class="form-input p-2 rounded" id="cal-text" placeholder="Комментарий" required>
             <button type="button" class="form-button p-2 rounded text-lg" onclick="calculateDietPoints()">Нажми для подсчёта очков 🍎</button>
         </form>
         <div id="diet-points-output" class="mt-4 p-4 border-t-2 border-gray-600 text-center">
-            <!-- Diet Points Output will appear here -->
         </div>
         
         <!-- Форма добавления продуктов -->
@@ -469,7 +469,7 @@
                         purchaseList.innerHTML += `
                             <li class="my-1 p-2 bg-gray-800 rounded">
                                 <div class="text-sm text-gray-400">${item.date}</div>
-                                <div class="text-sm mt-1">${item.details.name} - ${item.details.price} очков</div>
+                                <div class="text-sm mt-1">Куплено: "${item.details.name}" за ${item.details.price} очков</div>
                             </li>
                         `;
                     });
@@ -500,14 +500,27 @@
                     const { data, totalPages } = getPaginatedData(reversedHistory, currentPointsPage);
                     
                     data.forEach(record => {
-                        pointsList.innerHTML += `
-                            <li class="my-1 p-2 bg-gray-800 rounded">
-                                <div class="text-sm text-gray-400">${record.date}</div>
-                                <div class="text-sm mt-1">Получено: ${record.details.consumed} | Сожжено: ${record.details.burned}</div>
-                                <div class="text-sm">${record.details.calculation}</div>
-                                <div class="text-right mt-1">Итого: ${record.total} очков</div>
-                            </li>
-                        `;
+                        if (record.comment != undefined) {
+                            pointsList.innerHTML += `
+                                <li class="my-1 p-2 bg-gray-800 rounded">
+                                    <div class="text-sm text-gray-400">${record.date}</div>
+                                    <div class="text-sm mt-1">${record.comment}</div>
+                                    <div id="diet-points-output" class="border-t-2 border-gray-600 "></div>
+                                    <div class="text-sm mt-1">Получено: ${record.details.consumed} | Сожжено: ${record.details.burned}</div>
+                                    <div class="text-sm">${record.details.calculation}</div>
+                                    <div class="text-right mt-1">Итого: ${record.total} очков</div>
+                                </li>
+                            `;
+                        } else {
+                            pointsList.innerHTML += `
+                                <li class="my-1 p-2 bg-gray-800 rounded">
+                                    <div class="text-sm text-gray-400">${record.date}</div>
+                                    <div class="text-sm mt-1">Получено: ${record.details.consumed} | Сожжено: ${record.details.burned}</div>
+                                    <div class="text-sm">${record.details.calculation}</div>
+                                    <div class="text-right mt-1">Итого: ${record.total} очков</div>
+                                </li>
+                            `;
+                        }
                     });
         
                     // Добавляем пагинацию
@@ -595,6 +608,7 @@
                 date: new Date().toLocaleString(),
                 change: points,
                 total: userData.points,
+                comment: document.getElementById('cal-text').value,
                 details: {
                     consumed: calConsumed,
                     burned: calBurned,
@@ -678,6 +692,13 @@
             
             if (userData.points >= item.price) {
                 userData.points -= item.price;
+                userData.purchaseHistory.splice(0,0, {
+                    date: new Date().toLocaleString(),
+                    details: {
+                        name: item.name,
+                        price: item.price
+                    }
+                });
                 userData.purchaseHistory.push({
                     date: new Date().toLocaleString(),
                     details: {
@@ -687,8 +708,8 @@
                 });
                 
                 await saveData();
-                updateUI();
                 alert("Ты успешно купил предмет: " + item.name + "!");
+                updateUI();
             } else {
                 alert("У тебя недостаточно очков!");
             }
