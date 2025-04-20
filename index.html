@@ -202,6 +202,86 @@
             margin-bottom: 1rem;
             border-radius: 0.5rem;
         }
+        #quest-toggle {
+            position: fixed;
+            right: 320px;
+            top: 20px;
+            z-index: 1000;
+            background: #4a5568;
+            border: none;
+            color: white;
+            width: 30px;
+            height: 60px;
+            border-radius: 10px 0 0 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #quest-toggle:hover {
+            background: #2d3748;
+        }
+        
+        #quest-toggle.collapsed {
+            right: 0;
+        }
+        
+        #quest-panel.collapsed {
+            transform: translateX(100%);
+        }
+        #admin-panel {
+            background: #2d3748;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            border: 1px solid #4a5568;
+        }
+    
+        #admin-panel h3 {
+            color: #cbd5e0;
+            border-bottom: 2px solid #4a5568;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+    
+        #admin-panel .form-input {
+            background: #4a5568;
+            color: #f7fafc;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+    
+        #admin-panel button {
+            background: #48bb78;
+            transition: all 0.2s ease;
+        }
+    
+        #admin-panel button:hover {
+            background: #38a169;
+            transform: translateY(-1px);
+        }
+    
+        #reward-requests li {
+            background: #4a5568;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    
+        /* Скрываем кнопку переключения по умолчанию */
+        #quest-toggle {
+            display: none;
+        }
+    
+        /* Показываем только когда авторизованы */
+        #app-content:not(.hidden) + #quest-toggle {
+            display: block;
+        }
+        #quest-list button.bg-red-600:hover {
+            background-color: #c53030;
+            transform: scale(1.05);
+            transition: all 0.2s ease;
+        }
         .badge-healthy { background-color: #38a169; }
         .badge-warning { background-color: #dd6b20; }
         .badge-danger { background-color: #e53e3e; }
@@ -326,9 +406,9 @@
                 
                 <!-- Форма создания задания -->
                 <div class="mb-6">
-                    <input type="text" id="quest-title" placeholder="Название задания" class="form-input mb-2">
-                    <textarea id="quest-description" placeholder="Описание" class="form-input mb-2"></textarea>
-                    <input type="number" id="quest-reward" placeholder="Награда" class="form-input mb-2">
+                    <input type="text" id="quest-title" placeholder="Название задания" class="form-input p-2 rounded">
+                    <textarea id="quest-description" placeholder="Описание" class="form-input p-2 rounded"></textarea>
+                    <input type="number" id="quest-reward" placeholder="Награда" class="form-input p-2 rounded">
                     <button onclick="createQuest()" class="bg-green-600 text-white p-2 rounded w-full">
                         Создать задание
                     </button>
@@ -375,16 +455,22 @@
         let currentPointsPage = 1;
 
         auth.onAuthStateChanged(async user => {
+            const authContainer = document.getElementById('auth-container');
+            const appContent = document.getElementById('app-content');
+            const questToggle = document.getElementById('quest-toggle');
+    
             if (user) {
                 currentUser = user;
                 await loadUserData();
-                document.getElementById('auth-container').classList.add('hidden');
-                document.getElementById('app-content').classList.remove('hidden');
+                authContainer.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                questToggle.style.display = 'block'; // Показываем кнопку
             } else {
                 currentUser = null;
                 userData = null;
-                document.getElementById('auth-container').classList.remove('hidden');
-                document.getElementById('app-content').classList.add('hidden');
+                authContainer.classList.remove('hidden');
+                appContent.classList.add('hidden');
+                questToggle.style.display = 'none'; // Скрываем кнопку
             }
         });
         
@@ -453,11 +539,12 @@
                     points: data.points || 0,
                     storeItems: data.storeItems || [],
                     purchaseHistory: data.purchaseHistory || [],
-                    pointsHistory: data.pointsHistory || [],
+                    pointsHistory: Array.isArray(data.pointsHistory) ? data.pointsHistory : [], // Исправлено: было pointsHistory: data.pointsHistory || [],
                     login: data.login || '',
-                    isAdmin: adminUID.includes(currentUser.uid), // Будем проверять при загрузке
-                    completedQuests: []
+                    isAdmin: adminUID.includes(currentUser.uid),
+                    completedQuests: data.completedQuests || []
                 };
+                
                 if(userData.isAdmin) {
                     document.getElementById('admin-panel').classList.remove('hidden');
                     loadAdminData();
@@ -484,16 +571,27 @@
                 if(quest.isActive) {
                     const li = document.createElement('li');
                     li.className = 'mb-4 p-4 bg-gray-700 rounded-lg';
+                    
+                    // Добавляем кнопку удаления если это админ
+                    const adminControls = userData.isAdmin ? 
+                        `<button onclick="deleteQuest('${id}')" class="bg-red-600 px-3 py-1 rounded ml-2">
+                            Удалить
+                        </button>` : '';
+                    
                     li.innerHTML = `
                         <h4 class="font-bold mb-2">${quest.title}</h4>
                         <p class="text-sm mb-2">${quest.description}</p>
                         <div class="flex justify-between items-center">
                             <span class="text-yellow-400">Награда: ${quest.reward} очков</span>
-                            ${userData.completedQuests?.includes(id) ? 
-                                '<span class="text-green-500">Выполнено</span>' : 
-                                `<button onclick="requestReward('${id}')" class="bg-blue-600 px-3 py-1 rounded">
-                                    Запросить награду
-                                </button>`}
+                            <div class="flex items-center">
+                                ${userData.completedQuests?.includes(id) ? 
+                                    '<span class="text-green-500 mr-2">Выполнено</span>' : 
+                                    `<button onclick="requestReward('${id}')" 
+                                        class="bg-blue-600 px-3 py-1 rounded mr-2">
+                                        Запросить награду
+                                    </button>`}
+                                ${adminControls}
+                            </div>
                         </div>
                     `;
                     questList.appendChild(li);
@@ -501,6 +599,33 @@
             });
         }
         
+        // Добавим новую функцию для удаления заданий
+async function deleteQuest(questId) {
+    if (!confirm("Вы уверены, что хотите удалить это задание для всех пользователей?")) return;
+    
+    try {
+        // Полностью удаляем задание из базы данных
+        await db.ref(`quests/${questId}`).remove();
+        
+        // Также удаляем все связанные запросы на награду
+        const requestsSnapshot = await db.ref('rewardRequests').once('value');
+        const requests = requestsSnapshot.val() || {};
+        
+        Object.entries(requests).forEach(async ([requestId, request]) => {
+            if (request.questId === questId) {
+                await db.ref(`rewardRequests/${requestId}`).remove();
+            }
+        });
+        
+        // Обновляем список заданий
+        loadQuests();
+        alert("Задание успешно удалено!");
+    } catch (error) {
+        console.error('Ошибка удаления задания:', error);
+        alert('Не удалось удалить задание');
+    }
+}
+
         async function requestReward(questId) {
             const request = {
                 userName: userData.login,
@@ -522,19 +647,26 @@
             });
         }
         
-        function renderRequests(requests) {
+        async function renderRequests(requests) {
             const requestsList = document.getElementById('reward-requests');
             requestsList.innerHTML = '';
             
-            Object.entries(requests).forEach(([id, request]) => {
+            for (const [id, request] of Object.entries(requests)) {
+                const [userSnapshot, questSnapshot] = await Promise.all([
+                    db.ref(`users/${request.userId}`).once('value'),
+                    db.ref(`quests/${request.questId}`).once('value')
+                ]);
+                
+                const user = userSnapshot.val();
+                const quest = questSnapshot.val();
+                
                 const li = document.createElement('li');
                 li.className = 'mb-4 p-4 bg-gray-700 rounded-lg';
                 li.innerHTML = `
                     <div class="mb-2">
-                        <span class="text-sm">Пользователь: ${request.userName} </span><br>
-                        <span class="text-sm">ID Пользователя: ${request.userId}</span><br>
-                        <span class="text-sm">Задание: ${request.questId}</span><br>
-                        <span class="text-sm">ID Задания: ${request.questId}</span>
+                        <div class="text-sm">Пользователь: ${user.login}</div>
+                        <div class="text-sm">Задание: ${quest.title}</div>
+                        <div class="text-sm text-yellow-400">Награда: ${quest.reward} очков</div>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="approveRequest('${id}')" class="bg-green-600 px-3 py-1 rounded">
@@ -546,17 +678,21 @@
                     </div>
                 `;
                 requestsList.appendChild(li);
-            });
+            }
         }
         
         async function approveRequest(requestId) {
             try {
                 const request = (await db.ref(`rewardRequests/${requestId}`).once('value')).val();
                 
-                // Получаем данные задания из базы данных
-                const questSnapshot = await db.ref(`quests/${request.questId}`).once('value');
-                const quest = questSnapshot.val();
+                const [questSnapshot, userSnapshot] = await Promise.all([
+                    db.ref(`quests/${request.questId}`).once('value'),
+                    db.ref(`users/${request.userId}`).once('value')
+                ]);
                 
+                const quest = questSnapshot.val();
+                const user = userSnapshot.val();
+                            
                 if (!quest) {
                     throw new Error("Задание не найдено");
                 }
@@ -565,18 +701,29 @@
                 const userRef = db.ref(`users/${request.userId}`);
                 const userData = (await userRef.once('value')).val();
                 
-                await userRef.update({
-                    points: userData.points + quest.reward,
-                    completedQuests: [...(userData.completedQuests || []), request.questId]
-                });
+                const newPoints = userData.points + quest.reward;
+                const completedQuests = [...(userData.completedQuests || []), request.questId];
                 
-                // Обновляем историю очков
-                await db.ref(`users/${request.userId}/pointsHistory`).push({
+                // Создаем запись истории
+                const historyEntry = {
                     date: new Date().toLocaleString(),
                     type: 'quest',
-                    questId: request.questId,
-                    reward: quest.reward,
-                    comment: `Награда за задание: ${quest.title}`
+                    change: quest.reward,
+                    total: newPoints,
+                    questTitle: quest.title,
+                    comment: ``
+                };
+                
+                // Исправляем обновление истории
+                const updatedHistory = [
+                ...(Array.isArray(userData.pointsHistory) ? userData.pointsHistory : []),
+                historyEntry
+                ];
+                
+                await userRef.update({
+                    points: newPoints,
+                    completedQuests: completedQuests,
+                    pointsHistory: updatedHistory // Сохраняем как массив
                 });
                 
                 await db.ref(`rewardRequests/${requestId}`).remove();
@@ -586,6 +733,7 @@
                 alert('Ошибка: ' + error.message);
             }
         }
+        
         async function rejectRequest(requestId) {
             await db.ref(`rewardRequests/${requestId}`).remove();
         }
@@ -691,27 +839,34 @@
                     const { data, totalPages } = getPaginatedData(reversedHistory, currentPointsPage);
                     
                     data.forEach(record => {
-                        if (record.comment != undefined) {
-                            pointsList.innerHTML += `
-                                <li class="my-1 p-2 bg-gray-800 rounded">
-                                    <div class="text-sm text-gray-400">${record.date}</div>
-                                    <div class="text-sm mt-1">${record.comment}</div>
-                                    <div id="diet-points-output" class="border-t-2 border-gray-600 "></div>
-                                    <div class="text-sm mt-1">Получено: ${record.details.consumed} | Сожжено: ${record.details.burned}</div>
-                                    <div class="text-sm">${record.details.calculation}</div>
-                                    <div class="text-right mt-1">Итого: ${record.total} очков</div>
-                                </li>
-                            `;
-                        } else {
-                            pointsList.innerHTML += `
-                                <li class="my-1 p-2 bg-gray-800 rounded">
-                                    <div class="text-sm text-gray-400">${record.date}</div>
-                                    <div class="text-sm mt-1">Получено: ${record.details.consumed} | Сожжено: ${record.details.burned}</div>
-                                    <div class="text-sm">${record.details.calculation}</div>
-                                    <div class="text-right mt-1">Итого: ${record.total} очков</div>
-                                </li>
+                        let additionalInfo = '';
+                        if (record.type === 'quest') {
+                            additionalInfo = `
+                                <div class="text-sm text-green-400">
+                                    Награда за задание: "${record.questTitle}"
+                                </div>
                             `;
                         }
+                        let calculation = '';
+                        if (record.type != 'quest') {
+                            additionalInfo = `
+                            <div class="text-sm mt-1">Получено: ${record.details.consumed} | Сожжено: ${record.details.burned}</div>
+                            `;
+                        }
+                        pointsList.innerHTML += `
+                        <li class="my-1 p-2 bg-gray-800 rounded">
+                            <div class="text-sm text-gray-400">${record.date}</div>
+                            ${additionalInfo}
+                            <div class="text-sm mt-1">${record.comment || ''}</div>
+                            ${calculation}
+                            <div id="diet-points-output" class="border-t-2 border-gray-600 "></div>
+                            <div class="text-sm">Изменение: ${record.change} очков</div>
+                            <div class="text-right mt-1">Итого: ${record.total} очков</div>
+                        </li>
+                    `;
+                        
+                    
+
                     });
         
                     // Добавляем пагинацию
@@ -775,27 +930,22 @@
             const calConsumed = parseInt(document.getElementById('cal-consumed').value) || 0;
             const calBurned = parseInt(document.getElementById('cal-burned').value) || 0;
             
-            // Проверка на валидные числа
             if (isNaN(calConsumed) || isNaN(calBurned)) {
                 alert("Введите корректные числовые значения!");
                 return;
             }
         
             const points = calBurned * 3 - calConsumed;
-            
-            // Инициализация points если undefined
-            userData.points = userData.points || 0; 
-            userData.points += points;
+            userData.points = (userData.points || 0) + points;
         
-            // Добавляем вашу проверку
             if (userData.points > 100000) {
                 document.getElementById('diet-points-message').innerText = "А не многовато?";
             } else {
                 document.getElementById('diet-points-message').innerText = "";
             }
         
-            // Добавляем запись в историю
-            userData.pointsHistory.push({
+            // Создаем новую запись истории
+            const historyEntry = {
                 date: new Date().toLocaleString(),
                 change: points,
                 total: userData.points,
@@ -805,7 +955,14 @@
                     burned: calBurned,
                     calculation: `(${calBurned} × 3) - ${calConsumed} = ${points}`
                 }
-            });
+            };
+            
+            // Инициализируем pointsHistory если его нет
+            if (!Array.isArray(userData.pointsHistory)) {
+                userData.pointsHistory = [];
+            }
+            
+            userData.pointsHistory.push(historyEntry);
             
             try {
                 await saveData();
@@ -816,6 +973,14 @@
             }
         }
 
+        function toggleQuestPanel() {
+            const panel = document.getElementById('quest-panel');
+            const button = document.getElementById('quest-toggle');
+            
+            panel.classList.toggle('collapsed');
+            button.classList.toggle('collapsed');
+        }
+        
         function getSinLevel(calories) {
             if (calories > 350) return 2; // Вредно
             if (calories < 100) return 0; // полезно
@@ -929,6 +1094,14 @@
             };
             location.reload();
         }
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButton = document.createElement('button');
+            toggleButton.id = 'quest-toggle';
+            toggleButton.innerHTML = '◄';
+            toggleButton.onclick = toggleQuestPanel;
+            toggleButton.style.display = 'none'; // Начальное состояние - скрыта
+            document.body.appendChild(toggleButton);
+        });
     </script>
 </body>
 </html>
